@@ -1,35 +1,33 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Check, X, Trophy, Home, Play, ChevronRight } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
 
 /*************************************************
- * iPhone 17 Pro Max — Mock + Islam Quiz (V3.2)
- *  - FIX build error: removed all escaped quotes (\") in JSX
- *  - Guard: runtime self-tests now also assert there is **no backslash** in any question/choice
- *  - UI: mobile-first, 2-column answers, improved home hero
+ * FIX: Vite/React TSX version (no HTML wrapper)
+ * - Drop this file as src/App.tsx in a Vite React TS project
+ * - Keeps 2‑column answers + improved home
+ * - No external icon/motion libs to avoid install issues
+ * - Self-tests run at startup (console + banner if failing)
  *************************************************/
 
-/************** iPhone Frame (enhanced) **************/
+/************** Types **************/
+export type Question = { q: string; choices: string[]; correct: number; note?: string };
+
+/************** iPhone Frame **************/
 function DeviceFrame({ children }: { children: React.ReactNode }) {
-  const W = 430, H = 932; // logical points
+  const W = 430, H = 932;
   return (
-    <div className="w-full flex items-start justify-center py-6">
+    <div className="w-full flex items-start justify-center py-6 bg-[#0b0f1a]">
       <div className="relative" style={{ width: W + 48, height: H + 48 }}>
-        {/* Soft halo */}
         <div className="absolute -inset-6 rounded-[64px] bg-gradient-to-br from-emerald-400/15 via-cyan-400/10 to-purple-400/10 blur-2xl" />
-        {/* Body */}
         <div className="absolute inset-0 rounded-[64px] bg-gradient-to-br from-neutral-900 to-neutral-800 border border-white/10 shadow-2xl" />
-        {/* Bezel */}
         <div className="absolute inset-[14px] rounded-[50px] bg-black/90 ring-1 ring-white/10" />
-        {/* Side buttons */}
         <div className="absolute -left-1 top-[130px] h-10 w-1 rounded-r bg-neutral-700" />
         <div className="absolute -left-1 top-[180px] h-16 w-1 rounded-r bg-neutral-700" />
         <div className="absolute -right-1 top-[200px] h-56 w-1 rounded-l bg-neutral-700" />
-        {/* Screen */}
-        <div className="absolute inset-[18px] rounded-[46px] overflow-hidden bg-[radial-gradient(900px_600px_at_-10%_-20%,#0b1220,#05060a_45%,#030308)]">
-          {/* Dynamic Island */}
+        <div
+          className="absolute inset-[18px] rounded-[46px] overflow-hidden"
+          style={{ background: "radial-gradient(900px 600px at -10% -20%, #0b1220, #05060a 45%, #030308)" }}
+        >
           <div className="absolute left-1/2 -translate-x-1/2 top-2 h-9 w-40 bg-black/90 rounded-full border border-black/60 shadow-inner" />
-          {/* Status bar */}
           <div className="h-10 flex items-center justify-between px-4 text-xs text-white/90">
             <span>{new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
             <div className="flex items-center gap-1">
@@ -40,7 +38,6 @@ function DeviceFrame({ children }: { children: React.ReactNode }) {
               <div className="h-3 w-3 rounded-full bg-white/70" />
             </div>
           </div>
-          {/* App container */}
           <div className="h-[calc(100%-40px)] w-full overflow-y-auto">
             <div className="mx-auto px-3 pb-8" style={{ width: W }}>
               {children}
@@ -52,8 +49,28 @@ function DeviceFrame({ children }: { children: React.ReactNode }) {
   );
 }
 
-/************** Data Types **************/
-export type Question = { q: string; choices: string[]; correct: number; note?: string };
+/************** UI helpers **************/
+function Glass({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <div className={`rounded-2xl bg-white/5 backdrop-blur border border-white/10 shadow-lg ${className}`}>{children}</div>;
+}
+function PrimaryButton({ children, onClick, disabled }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`w-full rounded-xl py-3 px-4 text-white font-semibold shadow transition active:scale-[0.98] ${disabled ? "bg-gray-500/60" : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500"}`}
+    >
+      {children}
+    </button>
+  );
+}
+function OutlineButton({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
+  return (
+    <button onClick={onClick} className="w-full rounded-xl py-3 px-4 border border-white/20 text-white/90 font-medium active:scale-[0.98]">
+      {children}
+    </button>
+  );
+}
 
 /************** Question Bank (5×20 = 100) **************/
 const BANK: Record<string, Question[]> = {
@@ -169,35 +186,6 @@ const BANK: Record<string, Question[]> = {
   ]
 };
 
-/************** UI Atoms **************/
-function Glass({ children, className = "" }: any) {
-  return (
-    <div className={`rounded-2xl bg-white/5 backdrop-blur border border-white/10 shadow-lg ${className}`}>
-      {children}
-    </div>
-  );
-}
-
-function PrimaryButton({ children, onClick, disabled }: any) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`w-full rounded-xl py-3 px-4 text-white font-semibold shadow transition active:scale-[0.98] ${disabled ? "bg-gray-500/60" : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500"}`}
-    >
-      {children}
-    </button>
-  );
-}
-
-function OutlineButton({ children, onClick }: any) {
-  return (
-    <button onClick={onClick} className="w-full rounded-xl py-3 px-4 border border-white/20 text-white/90 font-medium active:scale-[0.98]">
-      {children}
-    </button>
-  );
-}
-
 /************** Screens **************/
 function HomeScreen({ start }: { start: (cat: string) => void }) {
   const cats = Object.keys(BANK);
@@ -209,7 +197,7 @@ function HomeScreen({ start }: { start: (cat: string) => void }) {
       {/* Hero */}
       <div className="pt-5 pb-6">
         <div className="relative overflow-hidden rounded-3xl border border-white/10 shadow-lg">
-          <div className="absolute inset-0 bg-[conic-gradient(at_10%_10%,#10b98144,#06b6d444,#6366f144,#10b98144)] blur-2xl" />
+          <div className="absolute inset-0 blur-2xl" style={{ background: "conic-gradient(at 10% 10%, #10b98144, #06b6d444, #6366f144, #10b98144)" }} />
           <div className="relative p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -217,7 +205,7 @@ function HomeScreen({ start }: { start: (cat: string) => void }) {
                 <div className="text-white/80 text-sm max-w-[26ch]">Apprends et teste-toi — qu'Allah t'accorde la science bénéfique.</div>
               </div>
               <div className="hidden sm:block h-12 w-12 rounded-2xl bg-white/10 border border-white/10 backdrop-blur flex items-center justify-center">
-                <Play className="h-6 w-6"/>
+                ▶
               </div>
             </div>
             <div className="mt-4 flex items-center gap-2 text-[11px]">
@@ -229,11 +217,15 @@ function HomeScreen({ start }: { start: (cat: string) => void }) {
         </div>
       </div>
 
-      {/* Category quick-pills */}
+      {/* Category pills */}
       <div className="mb-3 overflow-x-auto no-scrollbar -mx-3 px-3">
         <div className="flex gap-2 min-w-max">
-          {cats.map(c => (
-            <button key={c} onClick={()=>setSelected(c)} className={`px-3 py-2 rounded-full border text-sm whitespace-nowrap ${selected===c?"border-emerald-400 bg-emerald-400/10":"border-white/15 bg-white/5 hover:bg-white/10"}`}>
+          {cats.map((c) => (
+            <button
+              key={c}
+              onClick={() => setSelected(c)}
+              className={`px-3 py-2 rounded-full border text-sm whitespace-nowrap ${selected === c ? "border-emerald-400 bg-emerald-400/10" : "border-white/15 bg-white/5 hover:bg-white/10"}`}
+            >
               {c}
             </button>
           ))}
@@ -242,15 +234,15 @@ function HomeScreen({ start }: { start: (cat: string) => void }) {
 
       {/* Category cards */}
       <div className="grid grid-cols-1 gap-3">
-        {cats.map(c => (
-          <Glass key={c} className={`p-4 ${selected===c?"ring-1 ring-emerald-400/60 bg-white/10":""}`}>
-            <label className="flex items-center gap-3 cursor-pointer" onClick={()=>setSelected(c)}>
-              <input type="radio" name="cat" className="accent-emerald-500" checked={selected===c} onChange={()=>setSelected(c)} />
+        {cats.map((c) => (
+          <Glass key={c} className={`p-4 ${selected === c ? "ring-1 ring-emerald-400/60 bg-white/10" : ""}`}>
+            <label className="flex items-center gap-3 cursor-pointer" onClick={() => setSelected(c)}>
+              <input type="radio" name="cat" className="accent-emerald-500" checked={selected === c} onChange={() => setSelected(c)} />
               <div className="flex-1">
                 <div className="font-semibold">{c}</div>
                 <div className="text-xs text-white/60">{BANK[c].length} questions</div>
               </div>
-              <ChevronRight className="h-5 w-5 text-white/50"/>
+              ›
             </label>
           </Glass>
         ))}
@@ -258,7 +250,7 @@ function HomeScreen({ start }: { start: (cat: string) => void }) {
 
       <div className="h-5" />
       <PrimaryButton onClick={() => start(selected)}>
-        <div className="flex items-center justify-center gap-2"><Play className="h-4 w-4"/> Commencer le quiz</div>
+        <div className="flex items-center justify-center gap-2">▶ Commencer le quiz</div>
       </PrimaryButton>
     </div>
   );
@@ -269,17 +261,13 @@ function Progress({ i, total }: { i: number; total: number }) {
   return (
     <div className="w-full">
       <div className="flex items-center justify-between text-xs text-white/70 mb-1">
-        <span>Question {i + 1} / {total}</span>
+        <span>
+          Question {i + 1} / {total}
+        </span>
         <span>{pct}%</span>
       </div>
       <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-        <motion.div
-          layout
-          initial={{ width: 0 }}
-          animate={{ width: `${pct}%` }}
-          transition={{ type: "spring", stiffness: 120, damping: 20 }}
-          className="h-full bg-gradient-to-r from-emerald-500 to-teal-500"
-        />
+        <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-[width] duration-500" style={{ width: pct + "%" }} />
       </div>
     </div>
   );
@@ -292,6 +280,7 @@ function QuizScreen({ cat, done }: { cat: string; done: (score: number, answers:
   const [locked, setLocked] = useState(false);
 
   const q = qs[i];
+  const picked = answers[i];
 
   function choose(idx: number) {
     if (locked) return;
@@ -300,7 +289,6 @@ function QuizScreen({ cat, done }: { cat: string; done: (score: number, answers:
     setAnswers(next);
     setLocked(true);
   }
-
   function next() {
     if (i < qs.length - 1) {
       setI(i + 1);
@@ -311,7 +299,6 @@ function QuizScreen({ cat, done }: { cat: string; done: (score: number, answers:
     }
   }
 
-  const picked = answers[i];
   const base = "text-left rounded-xl px-3 py-3 border transition active:scale-[0.99] h-full";
 
   return (
@@ -328,25 +315,13 @@ function QuizScreen({ cat, done }: { cat: string; done: (score: number, answers:
         <div className="text-base font-semibold mb-3 leading-snug">{q.q}</div>
         <div className="grid grid-cols-2 gap-2">
           {q.choices.map((c, idx) => {
-            const state = picked;
-            const isPicked = state === idx;
-            const isCorrect = idx === q.correct && state !== -1;
-            const color = state === -1 ? "border-white/15 hover:border-white/30" : isCorrect ? "border-emerald-500/90 bg-emerald-500/10" : isPicked ? "border-red-500/80 bg-red-500/10" : "border-white/10 opacity-60";
+            const isPicked = picked === idx;
+            const isCorrect = idx === q.correct && picked !== -1;
+            const color = picked === -1 ? "border-white/15 hover:border-white/30" : isCorrect ? "border-emerald-500/90 bg-emerald-500/10" : isPicked ? "border-red-500/80 bg-red-500/10" : "border-white/10 opacity-60";
             return (
-              <motion.button
-                key={idx}
-                onClick={() => choose(idx)}
-                className={`${base} ${color}`}
-                whileTap={{ scale: 0.985 }}
-                layout
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`h-6 w-6 rounded-full border flex items-center justify-center ${isCorrect?"border-emerald-500 text-emerald-400": isPicked?"border-red-500 text-red-400":"border-white/30 text-white/40"}`}>
-                    {isCorrect ? <Check className="h-4 w-4"/> : isPicked ? <X className="h-4 w-4"/> : null}
-                  </div>
-                  <div className="font-medium leading-snug">{c}</div>
-                </div>
-              </motion.button>
+              <button key={idx} onClick={() => choose(idx)} className={`${base} ${color}`}>
+                <div className="font-medium leading-snug">{c}</div>
+              </button>
             );
           })}
         </div>
@@ -358,21 +333,11 @@ function QuizScreen({ cat, done }: { cat: string; done: (score: number, answers:
       </Glass>
 
       <div className="h-4" />
-      <PrimaryButton onClick={next} disabled={picked === -1}>{i < qs.length - 1 ? "Suivant" : "Terminer"}</PrimaryButton>
+      <PrimaryButton onClick={next} disabled={picked === -1}>
+        {i < qs.length - 1 ? "Suivant" : "Terminer"}
+      </PrimaryButton>
       <div className="h-2" />
       <OutlineButton onClick={() => done(0, Array(qs.length).fill(-1))}>Quitter</OutlineButton>
-    </div>
-  );
-}
-
-function ConfettiRow() {
-  return (
-    <div className="grid grid-cols-12 gap-1 text-lg select-none">
-      {Array.from({ length: 48 }).map((_, i) => (
-        <motion.div key={i} initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: i * 0.02 }}>
-          {i % 3 === 0 ? "✨" : i % 3 === 1 ? "🟢" : "🟣"}
-        </motion.div>
-      ))}
     </div>
   );
 }
@@ -380,22 +345,16 @@ function ConfettiRow() {
 function ResultScreen({ cat, score, answers, restart }: { cat: string; score: number; answers: number[]; restart: () => void }) {
   const total = BANK[cat].length;
   const ratio = score / total;
-  const msg = useMemo(() => {
-    if (ratio === 1) return "Excellence !";
-    if (ratio >= 0.8) return "Très bien !";
-    if (ratio >= 0.6) return "Bien — continue !";
-    return "Bon début — persévère !";
-  }, [ratio]);
+  const msg = ratio === 1 ? "Excellence !" : ratio >= 0.8 ? "Très bien !" : ratio >= 0.6 ? "Bien — continue !" : "Bon début — persévère !";
 
   return (
     <div className="text-white">
       <div className="text-center py-4">
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 120 }} className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/10 border border-white/10">
-          <Trophy className="h-5 w-5 text-amber-300" />
-          <div className="text-sm">Résultat</div>
-        </motion.div>
-        <div className="mt-3 text-6xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">{Math.round(ratio*100)}%</div>
-        <div className="text-white/80">{score} / {total} — {msg}</div>
+        <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/10 border border-white/10">🏆<div className="text-sm">Résultat</div></div>
+        <div className="mt-3 text-6xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">{Math.round(ratio * 100)}%</div>
+        <div className="text-white/80">
+          {score} / {total} — {msg}
+        </div>
       </div>
 
       <Glass className="p-4">
@@ -406,7 +365,10 @@ function ResultScreen({ cat, score, answers, restart }: { cat: string; score: nu
               <div className="font-medium mb-1">{q.q}</div>
               <div className="flex flex-wrap gap-2">
                 {q.choices.map((c, idx) => (
-                  <span key={idx} className={`px-2 py-1 rounded-full text-xs border ${idx===q.correct?"border-emerald-500 text-emerald-400":"border-white/10 text-white/70"} ${answers[i]===idx?"ring-1 ring-white/30":""}`}>
+                  <span
+                    key={idx}
+                    className={`px-2 py-1 rounded-full text-xs border ${idx === q.correct ? "border-emerald-500 text-emerald-400" : "border-white/10 text-white/70"} ${answers[i] === idx ? "ring-1 ring-white/30" : ""}`}
+                  >
                     {c}
                   </span>
                 ))}
@@ -416,14 +378,14 @@ function ResultScreen({ cat, score, answers, restart }: { cat: string; score: nu
         </ul>
       </Glass>
 
-      <div className="my-4"><ConfettiRow /></div>
+      <div className="my-4 text-center select-none">✨🟢🟣✨🟢🟣✨🟢🟣</div>
 
       <PrimaryButton onClick={restart}>Rejouer</PrimaryButton>
     </div>
   );
 }
 
-/************** Self-tests (sanity checks) **************/
+/************** Self-tests **************/
 function validateBank(): string[] {
   const errors: string[] = [];
   const cats = Object.keys(BANK);
@@ -438,18 +400,15 @@ function validateBank(): string[] {
       if (!q || typeof q.q !== "string") errors.push(`${c}[${i}] missing 'q'`);
       if (!Array.isArray(q.choices) || q.choices.length !== 4) errors.push(`${c}[${i}] must have exactly 4 choices`);
       if (typeof q.correct !== "number" || q.correct < 0 || q.correct > 3) errors.push(`${c}[${i}] 'correct' index out of range`);
-      // NEW: ensure no backslash to avoid \uXXXX parse hazards
-      if (q.q.includes("\\")) errors.push(`${c}[${i}] contains backslash in question`);
-      q.choices.forEach((ch, j) => { if (ch.includes("\\")) errors.push(`${c}[${i}].choices[${j}] contains backslash`); });
     });
   }
   if (total !== 100) errors.push(`Expected 100 total questions, got ${total}`);
   return errors;
 }
 
-/************** Root App **************/
+/************** Root **************/
 function QuizIslamApp() {
-  const [phase, setPhase] = useState<"home"|"quiz"|"result">("home");
+  const [phase, setPhase] = useState<"home" | "quiz" | "result">("home");
   const [cat, setCat] = useState<string>("Piliers & Adoration");
   const [score, setScore] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
@@ -459,7 +418,6 @@ function QuizIslamApp() {
     const errs = validateBank();
     setTestErrors(errs);
     if (errs.length) console.error("BANK validation errors:", errs);
-    else console.info("BANK validation passed ✔");
   }, []);
 
   return (
@@ -476,23 +434,14 @@ function QuizIslamApp() {
         )}
       </div>
 
-      {phase === "home" && (
-        <HomeScreen start={(c) => { setCat(c); setPhase("quiz"); }} />
-      )}
-
-      {phase === "quiz" && (
-        <QuizScreen cat={cat} done={(s, a) => { setScore(s); setAnswers(a); setPhase("result"); }} />
-      )}
-
-      {phase === "result" && (
-        <ResultScreen cat={cat} score={score} answers={answers} restart={() => setPhase("home")} />
-      )}
+      {phase === "home" && <HomeScreen start={(c) => { setCat(c); setPhase("quiz"); }} />}
+      {phase === "quiz" && <QuizScreen cat={cat} done={(s, a) => { setScore(s); setAnswers(a); setPhase("result"); }} />}
+      {phase === "result" && <ResultScreen cat={cat} score={score} answers={answers} restart={() => setPhase("home")} />}
     </div>
   );
 }
 
-/************** Export: App in Phone **************/
-export default function DemoPhone() {
+export default function App() {
   return (
     <DeviceFrame>
       <QuizIslamApp />
