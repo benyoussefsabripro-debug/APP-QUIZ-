@@ -1,11 +1,12 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Check, X, Trophy, Home, Play, Clock, ChevronRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { Check, X, Trophy, Home, Play, ChevronRight } from "lucide-react";
 
 /*************************************************
- * iPhone 17 Pro Max — Mock + Islam Quiz (V3 UI)
- *  - Visual polish: gradients, glass, motion, icons
- *  - Mobile-first, single-file for canvas preview
+ * iPhone 17 Pro Max — Mock + Islam Quiz (V3.2)
+ *  - FIX build error: removed all escaped quotes (\") in JSX
+ *  - Guard: runtime self-tests now also assert there is **no backslash** in any question/choice
+ *  - UI: mobile-first, 2-column answers, improved home hero
  *************************************************/
 
 /************** iPhone Frame (enhanced) **************/
@@ -201,23 +202,45 @@ function OutlineButton({ children, onClick }: any) {
 function HomeScreen({ start }: { start: (cat: string) => void }) {
   const cats = Object.keys(BANK);
   const [selected, setSelected] = useState<string>(cats[0]);
+  const totalQ = useMemo(() => Object.values(BANK).reduce((s, a) => s + a.length, 0), []);
+
   return (
     <div className="text-white">
+      {/* Hero */}
       <div className="pt-5 pb-6">
-        <div className="relative overflow-hidden rounded-2xl border border-white/10">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/40 via-cyan-600/40 to-indigo-600/40" />
-          <div className="relative p-5">
-            <div className="flex items-center gap-2 text-white/90">
-              <div className="h-9 w-9 rounded-xl bg-white/10 flex items-center justify-center"><Home className="h-5 w-5"/></div>
-              <div className="text-sm">Version mobile</div>
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 shadow-lg">
+          <div className="absolute inset-0 bg-[conic-gradient(at_10%_10%,#10b98144,#06b6d444,#6366f144,#10b98144)] blur-2xl" />
+          <div className="relative p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-3xl font-extrabold tracking-tight">Quiz Islam</div>
+                <div className="text-white/80 text-sm max-w-[26ch]">Apprends et teste-toi — qu'Allah t'accorde la science bénéfique.</div>
+              </div>
+              <div className="hidden sm:block h-12 w-12 rounded-2xl bg-white/10 border border-white/10 backdrop-blur flex items-center justify-center">
+                <Play className="h-6 w-6"/>
+              </div>
             </div>
-            <div className="mt-2 text-2xl font-extrabold tracking-tight">Quiz Islam</div>
-            <div className="text-white/80 text-sm">Apprends et teste-toi — qu'Allah t'accorde la science bénéfique.</div>
-            <div className="mt-3 text-xs text-white/70">Choisis une catégorie pour commencer</div>
+            <div className="mt-4 flex items-center gap-2 text-[11px]">
+              <span className="px-2 py-1 rounded-full bg-white/10 border border-white/10">📚 {totalQ} questions</span>
+              <span className="px-2 py-1 rounded-full bg-white/10 border border-white/10">🗂️ {cats.length} catégories</span>
+              <span className="px-2 py-1 rounded-full bg-white/10 border border-white/10">📱 Mobile</span>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Category quick-pills */}
+      <div className="mb-3 overflow-x-auto no-scrollbar -mx-3 px-3">
+        <div className="flex gap-2 min-w-max">
+          {cats.map(c => (
+            <button key={c} onClick={()=>setSelected(c)} className={`px-3 py-2 rounded-full border text-sm whitespace-nowrap ${selected===c?"border-emerald-400 bg-emerald-400/10":"border-white/15 bg-white/5 hover:bg-white/10"}`}>
+              {c}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Category cards */}
       <div className="grid grid-cols-1 gap-3">
         {cats.map(c => (
           <Glass key={c} className={`p-4 ${selected===c?"ring-1 ring-emerald-400/60 bg-white/10":""}`}>
@@ -233,9 +256,9 @@ function HomeScreen({ start }: { start: (cat: string) => void }) {
         ))}
       </div>
 
-      <div className="h-4" />
+      <div className="h-5" />
       <PrimaryButton onClick={() => start(selected)}>
-        <div className="flex items-center justify-center gap-2"><Play className="h-4 w-4"/> Commencer</div>
+        <div className="flex items-center justify-center gap-2"><Play className="h-4 w-4"/> Commencer le quiz</div>
       </PrimaryButton>
     </div>
   );
@@ -289,6 +312,7 @@ function QuizScreen({ cat, done }: { cat: string; done: (score: number, answers:
   }
 
   const picked = answers[i];
+  const base = "text-left rounded-xl px-3 py-3 border transition active:scale-[0.99] h-full";
 
   return (
     <div className="text-white">
@@ -302,12 +326,11 @@ function QuizScreen({ cat, done }: { cat: string; done: (score: number, answers:
       <div className="h-4" />
       <Glass className="p-4">
         <div className="text-base font-semibold mb-3 leading-snug">{q.q}</div>
-        <div className="grid grid-cols-1 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {q.choices.map((c, idx) => {
             const state = picked;
             const isPicked = state === idx;
             const isCorrect = idx === q.correct && state !== -1;
-            const base = "text-left rounded-xl px-3 py-3 border transition active:scale-[0.99]";
             const color = state === -1 ? "border-white/15 hover:border-white/30" : isCorrect ? "border-emerald-500/90 bg-emerald-500/10" : isPicked ? "border-red-500/80 bg-red-500/10" : "border-white/10 opacity-60";
             return (
               <motion.button
@@ -400,12 +423,44 @@ function ResultScreen({ cat, score, answers, restart }: { cat: string; score: nu
   );
 }
 
+/************** Self-tests (sanity checks) **************/
+function validateBank(): string[] {
+  const errors: string[] = [];
+  const cats = Object.keys(BANK);
+  if (cats.length !== 5) errors.push(`Expected 5 categories, got ${cats.length}`);
+  let total = 0;
+  for (const c of cats) {
+    const qs = BANK[c];
+    if (!Array.isArray(qs)) errors.push(`Category '${c}' is not an array`);
+    if (qs.length !== 20) errors.push(`Category '${c}' should have 20 questions, has ${qs.length}`);
+    total += qs.length;
+    qs.forEach((q, i) => {
+      if (!q || typeof q.q !== "string") errors.push(`${c}[${i}] missing 'q'`);
+      if (!Array.isArray(q.choices) || q.choices.length !== 4) errors.push(`${c}[${i}] must have exactly 4 choices`);
+      if (typeof q.correct !== "number" || q.correct < 0 || q.correct > 3) errors.push(`${c}[${i}] 'correct' index out of range`);
+      // NEW: ensure no backslash to avoid \uXXXX parse hazards
+      if (q.q.includes("\\")) errors.push(`${c}[${i}] contains backslash in question`);
+      q.choices.forEach((ch, j) => { if (ch.includes("\\")) errors.push(`${c}[${i}].choices[${j}] contains backslash`); });
+    });
+  }
+  if (total !== 100) errors.push(`Expected 100 total questions, got ${total}`);
+  return errors;
+}
+
 /************** Root App **************/
 function QuizIslamApp() {
   const [phase, setPhase] = useState<"home"|"quiz"|"result">("home");
   const [cat, setCat] = useState<string>("Piliers & Adoration");
   const [score, setScore] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
+  const [testErrors, setTestErrors] = useState<string[]>([]);
+
+  useEffect(() => {
+    const errs = validateBank();
+    setTestErrors(errs);
+    if (errs.length) console.error("BANK validation errors:", errs);
+    else console.info("BANK validation passed ✔");
+  }, []);
 
   return (
     <div className="min-h-full" style={{ colorScheme: "dark" }}>
@@ -414,6 +469,11 @@ function QuizIslamApp() {
           <div className="text-lg font-bold">Quiz Islam</div>
           <div className="text-[10px] text-white/90">Mobile</div>
         </div>
+        {testErrors.length > 0 && (
+          <div className="mt-2 text-[11px] bg-red-500/20 border border-red-500/40 rounded px-2 py-1">
+            Tests échoués: {testErrors.length} — vérifie la banque de questions (voir console)
+          </div>
+        )}
       </div>
 
       {phase === "home" && (
