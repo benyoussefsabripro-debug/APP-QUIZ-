@@ -173,7 +173,7 @@
 
     <div id="lettre">
       <h2>Message secret</h2>
-      <p>Antohny est gay</p>
+      <p>Antohny change de tenue</p>
     </div>
   </div>
 
